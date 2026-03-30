@@ -1,0 +1,25 @@
+{
+  "name": "node_http_server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./src/server.js",
+    "dev": "nodemon ./src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fabiancardozo99/node_http_server.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/fabiancardozo99/node_http_server/issues"
+  },
+  "homepage": "https://github.com/fabiancardozo99/node_http_server#readme",
+  "dependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
