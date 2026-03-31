@@ -1,6 +1,8 @@
 import http from "node:http";
+import { type } from "node:os";
 
 let tasks = [];
+let id = 1;
 
 const server = http.createServer((request, response) => {
   request.on("error", (err) => {
@@ -19,6 +21,7 @@ const server = http.createServer((request, response) => {
     return;
   }
 
+  // TODO: Add a basic validation for the text
   if (request.method === "POST" && request.url === "/tasks") {
     let body = [];
 
@@ -29,10 +32,21 @@ const server = http.createServer((request, response) => {
       .on("end", () => {
         try {
           body = Buffer.concat(body).toString();
-          const parseBody = JSON.parse(body);
+          const parsedBody = JSON.parse(body);
+
+          if (
+            typeof parsedBody.title !== "string" ||
+            parsedBody.title.trim() === ""
+          ) {
+            response.statusCode = 400;
+            response.setHeader("Content-Type", "application/json");
+            response.end(JSON.stringify({ error: "Invalid title" }));
+            return;
+          }
 
           const newTask = {
-            title: parseBody.title,
+            id: id++,
+            title: parsedBody.title,
           };
           tasks.push(newTask);
 
@@ -41,15 +55,17 @@ const server = http.createServer((request, response) => {
           response.end(JSON.stringify(newTask));
         } catch (error) {
           response.statusCode = 400;
-          response.end("Invalid JSON");
+          response.setHeader("Content-Type", "applicaiton/json");
+          response.end(JSON.stringify({ error: "Invalid JSON" }));
         }
       });
 
     return;
   }
 
-  response.statusCode = 400;
-  response.end("Not found");
+  response.statusCode = 404;
+  response.setHeader("Content-Type", "application/json");
+  response.end(JSON.stringify({ error: "Not found" }));
 });
 
 server.listen(3000, () => {
