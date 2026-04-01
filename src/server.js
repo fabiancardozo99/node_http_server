@@ -91,6 +91,36 @@ const server = http.createServer((request, response) => {
     return;
   }
 
+  if (
+    request.method === "DELETE" &&
+    urlParams.length === 3 &&
+    urlParams[1] === "tasks"
+  ) {
+    const paramId = Number(urlParams[2]);
+    if (isNaN(paramId)) {
+      response.statusCode = 400;
+      response.setHeader("Content-Type", "application/json");
+      response.end(JSON.stringify({ error: "Task id must be a number" }));
+      return;
+    }
+
+    const indexToDelete = tasks.findIndex((task) => task.id === paramId);
+
+    if (indexToDelete === -1) {
+      response.statusCode = 404;
+      response.setHeader("Content-Type", "application/json");
+      response.end(JSON.stringify({ error: "Task not found" }));
+      return;
+    }
+
+    tasks.splice(indexToDelete, 1);
+
+    response.statusCode = 200;
+    response.setHeader("Content-Type", "application/json");
+    response.end(JSON.stringify({ info: "Task deleted" }));
+    return;
+  }
+
   response.statusCode = 404;
   response.setHeader("Content-Type", "application/json");
   response.end(JSON.stringify({ error: "Not found" }));
