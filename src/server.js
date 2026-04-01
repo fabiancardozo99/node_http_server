@@ -1,5 +1,4 @@
 import http from "node:http";
-import { type } from "node:os";
 
 let tasks = [];
 let id = 1;
@@ -14,6 +13,8 @@ const server = http.createServer((request, response) => {
     console.error(err);
   });
 
+  const urlParams = request.url.split("/");
+
   if (request.method === "GET" && request.url === "/tasks") {
     response.statusCode = 200;
     response.setHeader("Content-Type", "application/json");
@@ -21,7 +22,6 @@ const server = http.createServer((request, response) => {
     return;
   }
 
-  // TODO: Add a basic validation for the text
   if (request.method === "POST" && request.url === "/tasks") {
     let body = [];
 
@@ -60,6 +60,34 @@ const server = http.createServer((request, response) => {
         }
       });
 
+    return;
+  }
+
+  if (
+    request.method === "GET" &&
+    urlParams.length === 3 &&
+    urlParams[1] === "tasks"
+  ) {
+    const paramId = Number(urlParams[2]);
+    if (isNaN(paramId)) {
+      response.statusCode = 400;
+      response.setHeader("Content-Type", "application/json");
+      response.end(JSON.stringify({ error: "Task id must be a number" }));
+      return;
+    }
+
+    const taskToReturn = tasks.find((task) => task.id === paramId);
+
+    if (taskToReturn === undefined) {
+      response.statusCode = 404;
+      response.setHeader("Content-Type", "application/json");
+      response.end(JSON.stringify({ error: "Task not found" }));
+      return;
+    }
+
+    response.statusCode = 200;
+    response.setHeader("Content-Type", "application/json");
+    response.end(JSON.stringify(taskToReturn));
     return;
   }
 
