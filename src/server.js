@@ -3,6 +3,7 @@ import http from "node:http";
 let tasks = [];
 let id = 1;
 
+// TODO: Add support for sending array of tasks
 const server = http.createServer((request, response) => {
   request.on("error", (err) => {
     console.error(err);
@@ -55,7 +56,7 @@ const server = http.createServer((request, response) => {
           response.end(JSON.stringify(newTask));
         } catch (error) {
           response.statusCode = 400;
-          response.setHeader("Content-Type", "applicaiton/json");
+          response.setHeader("Content-Type", "application/json");
           response.end(JSON.stringify({ error: "Invalid JSON" }));
         }
       });
@@ -118,6 +119,64 @@ const server = http.createServer((request, response) => {
     response.statusCode = 200;
     response.setHeader("Content-Type", "application/json");
     response.end(JSON.stringify({ info: "Task deleted" }));
+    return;
+  }
+
+  if (
+    request.method === "PATCH" &&
+    urlParams.length === 3 &&
+    urlParams[1] === "tasks"
+  ) {
+    const paramId = Number(urlParams[2]);
+
+    if (isNaN(paramId)) {
+      response.statusCode = 400;
+      response.setHeader("Content-Type", "application/json");
+      response.end(JSON.stringify({ error: "Task id must be a number" }));
+      return;
+    }
+
+    const indexToPatch = tasks.findIndex((task) => task.id === paramId);
+
+    if (indexToPatch === -1) {
+      response.statusCode = 404;
+      response.setHeader("Content-Type", "application/json");
+      response.end(JSON.stringify({ error: "Task not found" }));
+      return;
+    }
+
+    let body = [];
+    request
+      .on("data", (chunk) => {
+        body.push(chunk);
+      })
+      .on("end", () => {
+        try {
+          body = Buffer.concat(body).toString();
+          const parsedBody = JSON.parse(body);
+
+          if (
+            typeof parsedBody.title !== "string" ||
+            parsedBody.title.trim() === ""
+          ) {
+            response.statusCode = 400;
+            response.setHeader("Content-Type", "application/json");
+            response.end(JSON.stringify({ error: "Invalid title" }));
+            return;
+          }
+
+          tasks[indexToPatch].title = parsedBody.title;
+
+          response.statusCode = 200;
+          response.setHeader("Content-Type", "application/json");
+          response.end(JSON.stringify(tasks[indexToPatch]));
+        } catch (error) {
+          response.statusCode = 400;
+          response.setHeader("Content-Type", "application/json");
+          response.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+
     return;
   }
 
