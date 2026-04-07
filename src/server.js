@@ -3,6 +3,12 @@ import http from "node:http";
 let tasks = [];
 let id = 1;
 
+function sendJson(response, statusCode, data) {
+  response.statusCode = statusCode;
+  response.setHeader("Content-Type", "application/json");
+  response.end(JSON.stringify(data));
+}
+
 // TODO: Add support for sending array of tasks
 const server = http.createServer((request, response) => {
   request.on("error", (err) => {
@@ -17,9 +23,7 @@ const server = http.createServer((request, response) => {
   const urlParams = request.url.split("/");
 
   if (request.method === "GET" && request.url === "/tasks") {
-    response.statusCode = 200;
-    response.setHeader("Content-Type", "application/json");
-    response.end(JSON.stringify(tasks));
+    sendJson(response, 200, tasks);
     return;
   }
 
@@ -39,9 +43,7 @@ const server = http.createServer((request, response) => {
             typeof parsedBody.title !== "string" ||
             parsedBody.title.trim() === ""
           ) {
-            response.statusCode = 400;
-            response.setHeader("Content-Type", "application/json");
-            response.end(JSON.stringify({ error: "Invalid title" }));
+            sendJson(response, 400, { error: "Invalid title" });
             return;
           }
 
@@ -51,13 +53,9 @@ const server = http.createServer((request, response) => {
           };
           tasks.push(newTask);
 
-          response.statusCode = 201;
-          response.setHeader("Content-Type", "application/json");
-          response.end(JSON.stringify(newTask));
+          sendJson(response, 201, newTask);
         } catch (error) {
-          response.statusCode = 400;
-          response.setHeader("Content-Type", "application/json");
-          response.end(JSON.stringify({ error: "Invalid JSON" }));
+          sendJson(response, 400, { error: "Invalid JSON" });
         }
       });
 
@@ -71,24 +69,18 @@ const server = http.createServer((request, response) => {
   ) {
     const paramId = Number(urlParams[2]);
     if (isNaN(paramId)) {
-      response.statusCode = 400;
-      response.setHeader("Content-Type", "application/json");
-      response.end(JSON.stringify({ error: "Task id must be a number" }));
+      sendJson(response, 400, { error: "Task id must be a number" });
       return;
     }
 
     const taskToReturn = tasks.find((task) => task.id === paramId);
 
     if (taskToReturn === undefined) {
-      response.statusCode = 404;
-      response.setHeader("Content-Type", "application/json");
-      response.end(JSON.stringify({ error: "Task not found" }));
+      sendJson(response, 404, { error: "Task not found" });
       return;
     }
 
-    response.statusCode = 200;
-    response.setHeader("Content-Type", "application/json");
-    response.end(JSON.stringify(taskToReturn));
+    sendJson(response, 200, taskToReturn);
     return;
   }
 
@@ -99,26 +91,20 @@ const server = http.createServer((request, response) => {
   ) {
     const paramId = Number(urlParams[2]);
     if (isNaN(paramId)) {
-      response.statusCode = 400;
-      response.setHeader("Content-Type", "application/json");
-      response.end(JSON.stringify({ error: "Task id must be a number" }));
+      sendJson(response, 400, { error: "Task id must be a number" });
       return;
     }
 
     const indexToDelete = tasks.findIndex((task) => task.id === paramId);
 
     if (indexToDelete === -1) {
-      response.statusCode = 404;
-      response.setHeader("Content-Type", "application/json");
-      response.end(JSON.stringify({ error: "Task not found" }));
+      sendJson(response, 404, { error: "Task not found" });
       return;
     }
 
     tasks.splice(indexToDelete, 1);
 
-    response.statusCode = 200;
-    response.setHeader("Content-Type", "application/json");
-    response.end(JSON.stringify({ info: "Task deleted" }));
+    sendJson(response, 200, { info: "Task deleted" });
     return;
   }
 
@@ -130,18 +116,14 @@ const server = http.createServer((request, response) => {
     const paramId = Number(urlParams[2]);
 
     if (isNaN(paramId)) {
-      response.statusCode = 400;
-      response.setHeader("Content-Type", "application/json");
-      response.end(JSON.stringify({ error: "Task id must be a number" }));
+      sendJson(response, 400, { error: "Task id must be a number" });
       return;
     }
 
     const indexToPatch = tasks.findIndex((task) => task.id === paramId);
 
     if (indexToPatch === -1) {
-      response.statusCode = 404;
-      response.setHeader("Content-Type", "application/json");
-      response.end(JSON.stringify({ error: "Task not found" }));
+      sendJson(response, 404, { error: "Task not found" });
       return;
     }
 
@@ -159,30 +141,22 @@ const server = http.createServer((request, response) => {
             typeof parsedBody.title !== "string" ||
             parsedBody.title.trim() === ""
           ) {
-            response.statusCode = 400;
-            response.setHeader("Content-Type", "application/json");
-            response.end(JSON.stringify({ error: "Invalid title" }));
+            sendJson(response, 400, { error: "Invalid title" });
             return;
           }
 
           tasks[indexToPatch].title = parsedBody.title;
 
-          response.statusCode = 200;
-          response.setHeader("Content-Type", "application/json");
-          response.end(JSON.stringify(tasks[indexToPatch]));
+          sendJson(response, 200, tasks[indexToPatch]);
         } catch (error) {
-          response.statusCode = 400;
-          response.setHeader("Content-Type", "application/json");
-          response.end(JSON.stringify({ error: "Invalid JSON" }));
+          sendJson(response, 400, { error: "Invalid JSON" });
         }
       });
 
     return;
   }
 
-  response.statusCode = 404;
-  response.setHeader("Content-Type", "application/json");
-  response.end(JSON.stringify({ error: "Not found" }));
+  sendJson(response, 404, { error: "Not found" });
 });
 
 server.listen(3000, () => {
